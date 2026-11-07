@@ -1,0 +1,33 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install and Build Backend
+        working-directory: ./backend
+        run: |
+          npm ci
+          node -e "require('./server.js')" &
+          SERVER_PID=$!
+          sleep 2
+          kill $SERVER_PID || true
+
+      - name: Install and Build Frontend
+        working-directory: ./frontend
+        run: |
+          npm ci
+          npm run build
